@@ -1,0 +1,144 @@
+{
+  "studyRooms": [
+    {
+      "id": 1,
+      "name": "101自习室",
+      "floor": 1,
+      "status": "open",
+      "capacity": 80,
+      "current": 65,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "一楼大厅东侧，安静舒适，配备空调"
+    },
+    {
+      "id": 2,
+      "name": "102自习室",
+      "floor": 1,
+      "status": "open",
+      "capacity": 60,
+      "current": 45,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "一楼大厅西侧，靠近洗手间"
+    },
+    {
+      "id": 3,
+      "name": "103自习室",
+      "floor": 1,
+      "status": "closed",
+      "capacity": 50,
+      "current": 0,
+      "openTime": "08:00",
+      "closeTime": "18:00",
+      "description": "一楼南侧，维修中，暂不开放"
+    },
+    {
+      "id": 4,
+      "name": "201自习室",
+      "floor": 2,
+      "status": "open",
+      "capacity": 100,
+      "current": 88,
+      "openTime": "06:30",
+      "closeTime": "22:30",
+      "description": "二楼东侧，考研专区，座位宽敞"
+    },
+    {
+      "id": 5,
+      "name": "202自习室",
+      "floor": 2,
+      "status": "open",
+      "capacity": 70,
+      "current": 52,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "二楼西侧，有讨论区"
+    },
+    {
+      "id": 6,
+      "name": "203自习室",
+      "floor": 2,
+      "status": "open",
+      "capacity": 40,
+      "current": 30,
+      "openTime": "08:00",
+      "closeTime": "21:00",
+      "description": "二楼南侧，小型研讨室"
+    },
+    {
+      "id": 7,
+      "name": "301自习室",
+      "floor": 3,
+      "status": "open",
+      "capacity": 120,
+      "current": 95,
+      "openTime": "06:00",
+      "closeTime": "23:00",
+      "description": "三楼东侧，图书馆自习区，24小时开放部分区域"
+    },
+    {
+      "id": 8,
+      "name": "302自习室",
+      "floor": 3,
+      "status": "closed",
+      "capacity": 80,
+      "current": 0,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "三楼西侧，今日有活动占用"
+    },
+    {
+      "id": 9,
+      "name": "401自习室",
+      "floor": 4,
+      "status": "open",
+      "capacity": 90,
+      "current": 70,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "四楼东侧，电子阅览室，配备电脑"
+    },
+    {
+      "id": 10,
+      "name": "402自习室",
+      "floor": 4,
+      "status": "open",
+      "capacity": 55,
+      "current": 40,
+      "openTime": "08:00",
+      "closeTime": "21:00",
+      "description": "四楼西侧，外语学习专区"
+    },
+    {
+      "id": 11,
+      "name": "501自习室",
+      "floor": 5,
+      "status": "open",
+      "capacity": 60,
+      "current": 48,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "五楼东侧，研究生自习区"
+    },
+    {
+      "id": 12,
+      "name": "502自习室",
+      "floor": 5,
+      "status": "closed",
+      "capacity": 45,
+      "current": 0,
+      "openTime": "07:00",
+      "closeTime": "22:00",
+      "description": "五楼西侧，周末关闭"
+    }
+  ],
+  "usageStatistics": {
+    "title": "各自习室近7天使用量统计",
+    "unit": "人次",
+    "source": "校园自习室管理系统",
+    "period": "近7天",
+    "rooms": ["101自习室", "102自习室", "201自习室", "202自习室", "301自习室", "401自习室", "402自习室", "501自习室"],
+    "usage": [420, 380, 650, 520, 780, 590, 410, 480]
+  }
+}
