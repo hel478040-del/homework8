@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三维导览 - 城市图书馆信息中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        #three-container {
+            width: 100%;
+            height: calc(100vh - 120px);
+            min-height: 400px;
+            position: relative;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e8e8e8 100%);
+        }
+        #three-container canvas { display: block; width: 100% !important; height: 100% !important; }
+
+        #loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        #loading-overlay.hidden { display: none; }
+
+        #controls-hint {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            max-width: 280px;
+            display: none;
+        }
+        #info-panel.show { display: block; }
+
+        #scene-error {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            text-align: center;
+        }
+        #scene-error.show { display: flex; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <span class="brand-icon">CL</span>
+                城市图书馆信息中心
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../index.html#search">图书查询</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../index.html#stats">借阅统计</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#">三维导览</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="three-container">
+        <div id="loading-overlay">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p>正在加载三维场景...</p>
+        </div>
+        <div id="scene-error">
+            <p class="text-danger mb-3">三维场景加载失败</p>
+            <p class="text-muted">请检查网络连接后重试</p>
+            <button class="btn btn-outline-primary mt-3" onclick="location.reload()">重新加载</button>
+        </div>
+        <div id="controls-hint">鼠标拖拽旋转 | 滚轮缩放 | 点击建筑查看详情</div>
+        <div id="info-panel">
+            <h6 id="info-title" class="fw-bold mb-2"></h6>
+            <p id="info-desc" class="mb-0 text-muted" style="font-size:0.9rem;"></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script>
+        var scene, camera, renderer, raycaster, mouse;
+        var buildings = [];
+        var isDragging = false, prevMouseX = 0, prevMouseY = 0;
+        var azimuth = 0.5, polar = 0.8, distance = 30;
+        var cameraTarget = new THREE.Vector3(0, 2, 0);
+
+        var buildingData = [
+            { name: '主阅览室', desc: '一层大厅，容纳200个座位', pos: [0, 0, 0], size: [8, 6, 6], color: 0xa8d5ba },
+            { name: '文学区', desc: 'A区，馆藏文学类图书3500册', pos: [-12, 0, 0], size: [5, 4, 5], color: 0xf5deb3 },
+            { name: '科技区', desc: 'B区，馆藏科技类图书2800册', pos: [12, 0, 0], size: [5, 4, 5], color: 0xb0c4de },
+            { name: '历史区', desc: 'C区，馆藏历史类图书1200册', pos: [-12, 0, -12], size: [5, 4, 5], color: 0xd4a574 },
+            { name: '少儿区', desc: 'E区，专为儿童设计的阅读区', pos: [12, 0, -12], size: [5, 3.5, 5], color: 0xffb6c1 },
+            { name: '自习室', desc: '安静学习区，配备50个独立座位', pos: [0, 0, 14], size: [6, 4, 4], color: 0xc5cae9 },
+            { name: '多功能厅', desc: '讲座与活动场地，容纳100人', pos: [-14, 0, 14], size: [5, 5, 5], color: 0xcdc1ff },
+            { name: '入口大厅', desc: '读者入口，服务台与自助借还机', pos: [0, 0, -14], size: [7, 3, 3], color: 0x90caf9 }
+        ];
+
+        initScene();
+
+        function initScene() {
+            var container = document.getElementById('three-container');
+            if (typeof THREE === 'undefined') {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('scene-error').classList.add('show');
+                return;
+            }
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 500);
+            updateCamera();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(20, 30, 15);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.set(2048, 2048);
+            scene.add(dirLight);
+
+            var ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(60, 60),
+                new THREE.MeshStandardMaterial({ color: 0x7cb342 })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            var path = new THREE.Mesh(
+                new THREE.PlaneGeometry(4, 30),
+                new THREE.MeshStandardMaterial({ color: 0xd7ccc8 })
+            );
+            path.rotation.x = -Math.PI / 2;
+            path.position.set(0, 0.01, 0);
+            scene.add(path);
+
+            buildingData.forEach(function (data) {
+                var geo = new THREE.BoxGeometry(data.size[0], data.size[1], data.size[2]);
+                var mat = new THREE.MeshStandardMaterial({ color: data.color });
+                var mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(data.pos[0], data.size[1] / 2, data.pos[2]);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.userData = data;
+                scene.add(mesh);
+                buildings.push(mesh);
+
+                var roofGeo = new THREE.BoxGeometry(data.size[0] + 0.3, 0.3, data.size[2] + 0.3);
+                var roofMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41 });
+                var roof = new THREE.Mesh(roofGeo, roofMat);
+                roof.position.set(data.pos[0], data.size[1] + 0.15, data.pos[2]);
+                roof.castShadow = true;
+                scene.add(roof);
+            });
+
+            for (var i = 0; i < 15; i++) {
+                var tx = (Math.random() - 0.5) * 50;
+                var tz = (Math.random() - 0.5) * 50;
+                if (Math.abs(tx) < 3 && Math.abs(tz) < 16) continue;
+                var tree = new THREE.Mesh(
+                    new THREE.ConeGeometry(1.5, 3, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x2e7d32 })
+                );
+                tree.position.set(tx, 1.5, tz);
+                tree.castShadow = true;
+                scene.add(tree);
+            }
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            container.addEventListener('mousedown', onMouseDown);
+            container.addEventListener('mousemove', onMouseMove);
+            container.addEventListener('mouseup', onMouseUp);
+            container.addEventListener('wheel', onWheel);
+            window.addEventListener('resize', onResize);
+
+            document.getElementById('loading-overlay').classList.add('hidden');
+            animate();
+        }
+
+        function updateCamera() {
+            camera.position.x = cameraTarget.x + distance * Math.sin(polar) * Math.sin(azimuth);
+            camera.position.y = cameraTarget.y + distance * Math.cos(polar);
+            camera.position.z = cameraTarget.z + distance * Math.sin(polar) * Math.cos(azimuth);
+            camera.lookAt(cameraTarget);
+        }
+
+        function onMouseDown(e) {
+            isDragging = true;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+        }
+
+        function onMouseMove(e) {
+            var container = document.getElementById('three-container');
+            var rect = container.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            if (isDragging) {
+                var dx = e.clientX - prevMouseX;
+                var dy = e.clientY - prevMouseY;
+                azimuth -= dx * 0.01;
+                polar = Math.max(0.15, Math.min(Math.PI / 2 - 0.05, polar - dy * 0.01));
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+                updateCamera();
+            }
+        }
+
+        function onMouseUp(e) {
+            if (isDragging) {
+                var dx = Math.abs(e.clientX - prevMouseX);
+                var dy = Math.abs(e.clientY - prevMouseY);
+                if (dx < 3 && dy < 3) {
+                    handleClick();
+                }
+            }
+            isDragging = false;
+        }
+
+        function handleClick() {
+            raycaster.setFromCamera(mouse, camera);
+            var intersects = raycaster.intersectObjects(buildings);
+            if (intersects.length > 0) {
+                var data = intersects[0].object.userData;
+                var panel = document.getElementById('info-panel');
+                document.getElementById('info-title').textContent = data.name;
+                document.getElementById('info-desc').textContent = data.desc;
+                panel.classList.add('show');
+            } else {
+                document.getElementById('info-panel').classList.remove('show');
+            }
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+            distance = Math.max(10, Math.min(60, distance + e.deltaY * 0.05));
+            updateCamera();
+        }
+
+        function onResize() {
+            var container = document.getElementById('three-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
