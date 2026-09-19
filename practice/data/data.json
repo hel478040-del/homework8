@@ -1,0 +1,29 @@
+{
+    "library": {
+        "name": "城市图书馆",
+        "totalBooks": 12000,
+        "totalReaders": 8500
+    },
+    "borrowStatistics": {
+        "title": "各类别图书近30天借阅量",
+        "unit": "册",
+        "source": "城市图书馆管理系统",
+        "period": "近30天",
+        "categories": ["文学", "科技", "历史", "艺术", "少儿"],
+        "counts": [320, 280, 150, 95, 190]
+    },
+    "books": [
+        { "id": 1, "title": "百年孤独", "author": "马尔克斯", "category": "文学", "status": "在馆", "location": "A区3排" },
+        { "id": 2, "title": "红楼梦", "author": "曹雪芹", "category": "文学", "status": "在馆", "location": "A区1排" },
+        { "id": 3, "title": "追风筝的人", "author": "胡赛尼", "category": "文学", "status": "借出", "location": "A区5排" },
+        { "id": 4, "title": "三体", "author": "刘慈欣", "category": "科技", "status": "在馆", "location": "B区2排" },
+        { "id": 5, "title": "时间简史", "author": "霍金", "category": "科技", "status": "在馆", "location": "B区4排" },
+        { "id": 6, "title": "python编程", "author": "Eric Matthes", "category": "科技", "status": "借出", "location": "B区6排" },
+        { "id": 7, "title": "史记", "author": "司马迁", "category": "历史", "status": "在馆", "location": "C区1排" },
+        { "id": 8, "title": "明朝那些事", "author": "当年明月", "category": "历史", "status": "借出", "location": "C区3排" },
+        { "id": 9, "title": "艺术的故事", "author": "贡布里希", "category": "艺术", "status": "在馆", "location": "D区2排" },
+        { "id": 10, "title": "小王子", "author": "圣埃克苏佩里", "category": "少儿", "status": "在馆", "location": "E区1排" },
+        { "id": 11, "title": "夏洛的网", "author": "怀特", "category": "少儿", "status": "借出", "location": "E区2排" },
+        { "id": 12, "title": "活着", "author": "余华", "category": "文学", "status": "在馆", "location": "A区2排" }
+    ]
+}

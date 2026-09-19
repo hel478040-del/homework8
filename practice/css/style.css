@@ -5,6 +5,25 @@
     --footer-h: 60px;
 }
 
+/* 跳过导航链接（可访问性） */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--brand-dark);
+    color: white;
+    padding: 8px 16px;
+    z-index: 1000;
+    transition: top 0.3s;
+    text-decoration: none;
+}
+.skip-link:focus {
+    top: 0;
+    color: white;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
 body {
     font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
     padding-top: 70px;

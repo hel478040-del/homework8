@@ -176,13 +176,43 @@ var chartData = {
 function loadChartData() {
     var chartContainer = document.getElementById('chart-container');
     var chartError = document.getElementById('chart-error');
+    var chartEmpty = document.getElementById('chart-empty');
+    var chartErrorText = document.getElementById('chart-error-text');
 
     try {
+        // 数据格式校验
+        if (!chartData) {
+            throw new Error('数据为空');
+        }
+        if (!chartData.rooms || !chartData.usage || !Array.isArray(chartData.rooms) || !Array.isArray(chartData.usage)) {
+            throw new Error('数据格式错误');
+        }
+        if (chartData.rooms.length === 0 || chartData.usage.length === 0) {
+            // 空数据状态
+            if (chartEmpty && chartContainer) {
+                chartContainer.style.display = 'none';
+                chartError.classList.add('d-none');
+                chartEmpty.classList.remove('d-none');
+            }
+            return;
+        }
+        if (chartData.rooms.length !== chartData.usage.length) {
+            throw new Error('数据格式错误：数据条数不匹配');
+        }
+
+        // 正常渲染
+        if (chartEmpty) chartEmpty.classList.add('d-none');
+        if (chartError) chartError.classList.add('d-none');
+        chartContainer.style.display = 'block';
         renderChart(chartData);
     } catch (error) {
         console.error('图表渲染失败:', error);
         if (chartError && chartContainer) {
             chartContainer.style.display = 'none';
+            if (chartEmpty) chartEmpty.classList.add('d-none');
+            if (chartErrorText) {
+                chartErrorText.textContent = '图表数据加载失败：' + error.message;
+            }
             chartError.classList.remove('d-none');
         }
     }

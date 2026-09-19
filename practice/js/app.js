@@ -113,11 +113,35 @@ function loadChartData() {
     var chartContainer = document.getElementById('chart-container');
     var chartError = document.getElementById('chart-error');
     var chartSource = document.getElementById('chart-source');
+    var chartEmpty = document.getElementById('chart-empty');
+    var chartErrorText = document.getElementById('chart-error-text');
 
     try {
         if (typeof echarts === 'undefined') {
             throw new Error('ECharts 未加载');
         }
+
+        // 数据格式校验
+        if (!chartData) {
+            throw new Error('数据为空');
+        }
+        if (!chartData.categories || !chartData.counts || !Array.isArray(chartData.categories) || !Array.isArray(chartData.counts)) {
+            throw new Error('数据格式错误');
+        }
+        if (chartData.categories.length === 0 || chartData.counts.length === 0) {
+            chartContainer.style.display = 'none';
+            if (chartError) chartError.classList.add('d-none');
+            if (chartEmpty) chartEmpty.classList.remove('d-none');
+            return;
+        }
+        if (chartData.categories.length !== chartData.counts.length) {
+            throw new Error('数据格式错误：数据条数不匹配');
+        }
+
+        // 正常渲染
+        if (chartEmpty) chartEmpty.classList.add('d-none');
+        if (chartError) chartError.classList.add('d-none');
+        chartContainer.style.display = 'block';
 
         if (chartInstance) {
             chartInstance.dispose();
@@ -181,6 +205,10 @@ function loadChartData() {
         console.error('图表渲染失败:', error);
         if (chartError && chartContainer) {
             chartContainer.style.display = 'none';
+            if (chartEmpty) chartEmpty.classList.add('d-none');
+            if (chartErrorText) {
+                chartErrorText.textContent = '图表加载失败：' + error.message;
+            }
             chartError.classList.remove('d-none');
         }
     }
