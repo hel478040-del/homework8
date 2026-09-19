@@ -1,0 +1,132 @@
+:root {
+    --brand: #2c7a51;
+    --brand-dark: #1a5c3a;
+    --brand-light: #e8f5ee;
+    --footer-h: 60px;
+}
+
+body {
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    padding-top: 70px;
+}
+
+.navbar-brand .brand-icon {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    background: var(--brand);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.page-section {
+    padding: 60px 0;
+    min-height: calc(100vh - 70px - var(--footer-h));
+}
+
+.hero-banner {
+    padding: 40px 0;
+}
+
+.hero-banner h1 {
+    color: var(--brand-dark);
+}
+
+.feature-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    transition: box-shadow 0.3s, transform 0.3s;
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+}
+
+.feature-icon {
+    width: 56px;
+    height: 56px;
+    line-height: 56px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin: 0 auto 12px;
+}
+
+.section-title {
+    color: var(--brand-dark);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.book-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+
+.book-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.book-card .book-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+}
+
+.book-card .book-meta {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.book-card .status-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+.status-in {
+    background: var(--brand-light);
+    color: var(--brand-dark);
+}
+
+.status-out {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.footer {
+    min-height: var(--footer-h);
+}
+
+@media (max-width: 768px) {
+    .hero-banner h1 {
+        font-size: 1.8rem;
+    }
+    .feature-card .card-title {
+        font-size: 1rem;
+    }
+    .section-title {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 375px) {
+    .page-section {
+        padding: 40px 0;
+    }
+    .hero-banner {
+        padding: 20px 0;
+    }
+    .hero-banner h1 {
+        font-size: 1.5rem;
+    }
+}

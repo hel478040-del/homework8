@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市图书馆信息中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#home">
+                <span class="brand-icon">CL</span>
+                城市图书馆信息中心
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#home">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#search">图书查询</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#stats">借阅统计</a></li>
+                    <li class="nav-item"><a class="nav-link" href="three-d/scene.html">三维导览</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 首页区域 -->
+    <section id="home" class="page-section">
+        <div class="container">
+            <div class="hero-banner text-center">
+                <h1 class="display-4 fw-bold">城市图书馆信息中心</h1>
+                <p class="lead text-muted">整合图书查询、借阅统计与三维导览的一站式服务平台</p>
+            </div>
+
+            <div class="row g-4 mt-4">
+                <div class="col-md-6 col-lg-3">
+                    <a href="#search" class="text-decoration-none">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-primary">S</div>
+                                <h5 class="card-title">图书查询</h5>
+                                <p class="card-text text-muted">按分类、状态筛选馆藏图书</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <a href="#stats" class="text-decoration-none">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-success">B</div>
+                                <h5 class="card-title">借阅统计</h5>
+                                <p class="card-text text-muted">可视化展示各类别借阅热度</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <a href="three-d/scene.html" class="text-decoration-none">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-info">3D</div>
+                                <h5 class="card-title">三维导览</h5>
+                                <p class="card-text text-muted">沉浸式浏览图书馆空间布局</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <a href="#search" class="text-decoration-none">
+                        <div class="card feature-card h-100">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-warning">N</div>
+                                <h5 class="card-title">新书推荐</h5>
+                                <p class="card-text text-muted">查看最新入馆图书资讯</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 图书查询区域 -->
+    <section id="search" class="page-section bg-light">
+        <div class="container">
+            <h2 class="section-title">图书查询</h2>
+            <p class="text-muted mb-4">按分类和状态筛选馆藏图书</p>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">分类</label>
+                    <select id="filter-category" class="form-select">
+                        <option value="all">全部分类</option>
+                        <option value="文学">文学</option>
+                        <option value="科技">科技</option>
+                        <option value="历史">历史</option>
+                        <option value="艺术">艺术</option>
+                        <option value="少儿">少儿</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">状态</label>
+                    <select id="filter-status" class="form-select">
+                        <option value="all">全部状态</option>
+                        <option value="在馆">在馆</option>
+                        <option value="借出">借出</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <span class="badge bg-primary" id="result-count">共 0 本图书</span>
+            </div>
+
+            <div id="book-list" class="row g-3"></div>
+
+            <div id="no-result" class="text-center py-5 d-none">
+                <p class="text-muted">没有符合条件的图书</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 借阅统计区域 -->
+    <section id="stats" class="page-section">
+        <div class="container">
+            <h2 class="section-title">借阅统计</h2>
+            <p class="text-muted mb-4">各类别图书近30天借阅量</p>
+
+            <div id="chart-container" style="width: 100%; height: 400px;"></div>
+
+            <div id="chart-error" class="text-center py-5 d-none">
+                <p class="text-danger">图表加载失败，请重试</p>
+                <button id="retry-chart" class="btn btn-outline-primary">重新加载</button>
+            </div>
+
+            <p class="text-center text-muted mt-3" id="chart-source" style="font-size: 0.85rem;"></p>
+        </div>
+    </section>
+
+    <footer class="footer bg-dark text-light text-center py-3">
+        <p class="mb-0">城市图书馆信息中心 &copy; 2026 | 自主实践项目</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
