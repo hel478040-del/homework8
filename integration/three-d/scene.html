@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园三维导览 - 校园信息中心</title>
+    <!-- Bootstrap 5.3.0 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* 三维场景容器 */
+        #three-container {
+            width: 100%;
+            height: calc(100vh - 120px);
+            min-height: 400px;
+            position: relative;
+            background-color: #87CEEB;
+        }
+
+        #three-container canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* 加载提示 */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+
+        #loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        /* 操作提示 */
+        #controls-hint {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            z-index: 5;
+        }
+
+        /* 地标标签 */
+        #landmark-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            z-index: 5;
+        }
+
+        #landmark-info h5 {
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+        }
+
+        #landmark-info p {
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        /* 错误提示 */
+        #three-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 20;
+            display: none;
+        }
+
+        #three-error.show {
+            display: block;
+        }
+
+        #three-error .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            #three-container {
+                height: calc(100vh - 100px);
+                min-height: 300px;
+            }
+
+            #controls-hint {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            #landmark-info {
+                min-width: 150px;
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">校园信息中心</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="切换导航">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html#home">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html#study-room">自习室</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html#statistics">统计</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="scene.html">校园三维</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 三维场景区 -->
+    <div id="three-container">
+        <!-- 加载提示 -->
+        <div id="loading-overlay">
+            <div class="text-center">
+                <div class="spinner-border text-primary spinner" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-3 text-muted">三维场景加载中，请稍候...</p>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="three-error">
+            <div class="icon">&#9888;</div>
+            <h5>三维场景加载失败</h5>
+            <p class="text-muted">请检查网络连接后刷新页面重试</p>
+            <a href="../index.html" class="btn btn-primary">返回首页</a>
+        </div>
+
+        <!-- 地标信息 -->
+        <div id="landmark-info">
+            <h5>校园地标导览</h5>
+            <p id="landmark-name">图书馆</p>
+            <p id="landmark-desc" class="text-muted">点击建筑查看详情</p>
+        </div>
+
+        <!-- 操作提示 -->
+        <div id="controls-hint">
+            <strong>操作提示：</strong><br>
+            鼠标左键拖动：旋转视角<br>
+            鼠标滚轮：缩放<br>
+            右键拖动：平移
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.0 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        'use strict';
+
+        // ========== 三维场景初始化 ==========
+        let scene, camera, renderer;
+        let buildings = [];
+        let raycaster, mouse;
+
+        // 校园地标数据
+        const landmarks = [
+            { name: '图书馆', desc: '藏书百万册，24小时自习区', position: { x: 0, y: 0, z: 0 }, color: 0x4a90d9, size: { w: 8, h: 12, d: 6 } },
+            { name: '教学楼A', desc: '公共课教室，共5层', position: { x: -15, y: 0, z: 0 }, color: 0xe8a83c, size: { w: 10, h: 10, d: 8 } },
+            { name: '教学楼B', desc: '专业课教室，共6层', position: { x: 15, y: 0, z: 0 }, color: 0xe8a83c, size: { w: 10, h: 12, d: 8 } },
+            { name: '实验楼', desc: '物理/化学/生物实验室', position: { x: 0, y: 0, z: -15 }, color: 0x6b8e23, size: { w: 12, h: 8, d: 10 } },
+            { name: '体育馆', desc: '室内篮球场、游泳馆', position: { x: -15, y: 0, z: -15 }, color: 0x9370db, size: { w: 14, h: 6, d: 12 } },
+            { name: '食堂', desc: '三层楼，各地美食', position: { x: 15, y: 0, z: -15 }, color: 0xcd5c5c, size: { w: 10, h: 6, d: 8 } },
+            { name: '行政楼', desc: '校务办公、会议室', position: { x: 0, y: 0, z: 15 }, color: 0x708090, size: { w: 8, h: 14, d: 6 } },
+            { name: '宿舍楼', desc: '学生公寓，共8层', position: { x: -18, y: 0, z: 12 }, color: 0xdeb887, size: { w: 6, h: 16, d: 6 } }
+        ];
+
+        function init() {
+            const container = document.getElementById('three-container');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const errorPanel = document.getElementById('three-error');
+
+            // 检查 Three.js 是否加载
+            if (typeof THREE === 'undefined') {
+                loadingOverlay.classList.add('hidden');
+                errorPanel.classList.add('show');
+                console.error('Three.js 加载失败');
+                return;
+            }
+
+            try {
+                // 场景
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x87CEEB);
+                scene.fog = new THREE.Fog(0x87CEEB, 50, 150);
+
+                // 相机
+                camera = new THREE.PerspectiveCamera(
+                    60,
+                    container.clientWidth / container.clientHeight,
+                    0.1,
+                    1000
+                );
+
+                // 自定义轨道控制器参数
+                const orbit = {
+                    target: new THREE.Vector3(0, 2, 0),
+                    radius: 35,
+                    theta: Math.PI / 4,
+                    phi: Math.PI / 3,
+                    minRadius: 10,
+                    maxRadius: 80,
+                    minPhi: 0.1,
+                    maxPhi: Math.PI / 2 - 0.1
+                };
+
+                let isDragging = false;
+                let isPanning = false;
+                let previousMousePosition = { x: 0, y: 0 };
+                let mouseDownPosition = { x: 0, y: 0 };
+                let mouseDownButton = -1;
+
+                // 更新相机位置
+                function updateCameraPosition() {
+                    camera.position.x = orbit.target.x + orbit.radius * Math.sin(orbit.phi) * Math.cos(orbit.theta);
+                    camera.position.y = orbit.target.y + orbit.radius * Math.cos(orbit.phi);
+                    camera.position.z = orbit.target.z + orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta);
+                    camera.lookAt(orbit.target);
+                }
+                updateCameraPosition();
+
+                // 渲染器
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(renderer.domElement);
+
+                // 鼠标事件 - 旋转/平移/缩放
+                const canvas = renderer.domElement;
+
+                canvas.addEventListener('mousedown', function (e) {
+                    mouseDownButton = e.button;
+                    mouseDownPosition = { x: e.clientX, y: e.clientY };
+                    if (e.button === 0) {
+                        isDragging = true;
+                    } else if (e.button === 2) {
+                        isPanning = true;
+                    }
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+
+                canvas.addEventListener('mousemove', function (e) {
+                    if (isDragging) {
+                        const deltaX = e.clientX - previousMousePosition.x;
+                        const deltaY = e.clientY - previousMousePosition.y;
+                        orbit.theta -= deltaX * 0.01;
+                        orbit.phi -= deltaY * 0.01;
+                        orbit.phi = Math.max(orbit.minPhi, Math.min(orbit.maxPhi, orbit.phi));
+                        updateCameraPosition();
+                    } else if (isPanning) {
+                        const deltaX = e.clientX - previousMousePosition.x;
+                        const deltaY = e.clientY - previousMousePosition.y;
+                        const panSpeed = orbit.radius * 0.001;
+                        const right = new THREE.Vector3();
+                        const up = new THREE.Vector3(0, 1, 0);
+                        camera.getWorldDirection(right);
+                        right.cross(up).normalize();
+                        orbit.target.addScaledVector(right, -deltaX * panSpeed);
+                        orbit.target.y += deltaY * panSpeed;
+                        updateCameraPosition();
+                    }
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+
+                canvas.addEventListener('mouseup', function (e) {
+                    // 判断是否为点击（移动距离小于5像素且为左键）
+                    const moveDistance = Math.sqrt(
+                        Math.pow(e.clientX - mouseDownPosition.x, 2) +
+                        Math.pow(e.clientY - mouseDownPosition.y, 2)
+                    );
+                    if (mouseDownButton === 0 && moveDistance < 5) {
+                        handleBuildingClick(e);
+                    }
+                    isDragging = false;
+                    isPanning = false;
+                    mouseDownButton = -1;
+                });
+
+                canvas.addEventListener('mouseleave', function () {
+                    isDragging = false;
+                    isPanning = false;
+                    mouseDownButton = -1;
+                });
+
+                canvas.addEventListener('wheel', function (e) {
+                    e.preventDefault();
+                    const zoomSpeed = 0.001;
+                    orbit.radius += e.deltaY * zoomSpeed * orbit.radius;
+                    orbit.radius = Math.max(orbit.minRadius, Math.min(orbit.maxRadius, orbit.radius));
+                    updateCameraPosition();
+                }, { passive: false });
+
+                // 禁用右键菜单
+                canvas.addEventListener('contextmenu', function (e) {
+                    e.preventDefault();
+                });
+
+                // 射线检测（点击交互）
+                raycaster = new THREE.Raycaster();
+                mouse = new THREE.Vector2();
+
+                // 添加光照
+                addLights();
+
+                // 添加地面
+                addGround();
+
+                // 添加建筑
+                addBuildings();
+
+                // 添加道路
+                addRoads();
+
+                // 添加树木装饰
+                addTrees();
+
+                // 窗口大小变化
+                window.addEventListener('resize', onWindowResize);
+
+                // 隐藏加载提示
+                setTimeout(function () {
+                    loadingOverlay.classList.add('hidden');
+                }, 500);
+
+                // 开始动画循环
+                animate();
+
+            } catch (error) {
+                console.error('三维场景初始化失败:', error);
+                loadingOverlay.classList.add('hidden');
+                errorPanel.classList.add('show');
+            }
+        }
+
+        // 处理建筑点击
+        function handleBuildingClick(event) {
+            const container = document.getElementById('three-container');
+            const rect = container.getBoundingClientRect();
+
+            mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(buildings);
+
+            if (intersects.length > 0) {
+                const building = intersects[0].object;
+                const data = building.userData;
+                showLandmarkInfo(data.name, data.desc);
+
+                // 高亮效果 - 短暂变色
+                const originalColor = building.material.color.getHex();
+                building.material.color.set(0xffff00);
+                setTimeout(function () {
+                    building.material.color.setHex(originalColor);
+                }, 300);
+            }
+        }
+
+        // 显示地标信息
+        function showLandmarkInfo(name, desc) {
+            document.getElementById('landmark-name').textContent = name;
+            document.getElementById('landmark-desc').textContent = desc;
+        }
+
+        // 添加光照
+        function addLights() {
+            // 环境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // 平行光（模拟太阳光）
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(20, 30, 20);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 100;
+            directionalLight.shadow.camera.left = -40;
+            directionalLight.shadow.camera.right = 40;
+            directionalLight.shadow.camera.top = 40;
+            directionalLight.shadow.camera.bottom = -40;
+            scene.add(directionalLight);
+        }
+
+        // 添加地面
+        function addGround() {
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x7CFC00,
+                roughness: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+        }
+
+        // 添加建筑
+        function addBuildings() {
+            landmarks.forEach(function (landmark, index) {
+                const geometry = new THREE.BoxGeometry(
+                    landmark.size.w,
+                    landmark.size.h,
+                    landmark.size.d
+                );
+                const material = new THREE.MeshStandardMaterial({
+                    color: landmark.color,
+                    roughness: 0.7
+                });
+                const building = new THREE.Mesh(geometry, material);
+                building.position.set(
+                    landmark.position.x,
+                    landmark.size.h / 2,
+                    landmark.position.z
+                );
+                building.castShadow = true;
+                building.receiveShadow = true;
+                building.userData = { landmarkIndex: index, name: landmark.name, desc: landmark.desc };
+                scene.add(building);
+                buildings.push(building);
+
+                // 楼顶装饰
+                const roofGeometry = new THREE.BoxGeometry(
+                    landmark.size.w * 0.8,
+                    0.5,
+                    landmark.size.d * 0.8
+                );
+                const roofMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x333333,
+                    roughness: 0.9
+                });
+                const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                roof.position.set(
+                    landmark.position.x,
+                    landmark.size.h + 0.25,
+                    landmark.position.z
+                );
+                roof.castShadow = true;
+                scene.add(roof);
+            });
+        }
+
+        // 添加道路
+        function addRoads() {
+            const roadMaterial = new THREE.MeshStandardMaterial({
+                color: 0x555555,
+                roughness: 0.9
+            });
+
+            // 横向主干道
+            const hRoad = new THREE.Mesh(
+                new THREE.PlaneGeometry(80, 4),
+                roadMaterial
+            );
+            hRoad.rotation.x = -Math.PI / 2;
+            hRoad.position.y = 0.01;
+            hRoad.receiveShadow = true;
+            scene.add(hRoad);
+
+            // 纵向主干道
+            const vRoad = new THREE.Mesh(
+                new THREE.PlaneGeometry(4, 80),
+                roadMaterial
+            );
+            vRoad.rotation.x = -Math.PI / 2;
+            vRoad.position.y = 0.01;
+            vRoad.receiveShadow = true;
+            scene.add(vRoad);
+
+            // 人行道（白色虚线）
+            const lineMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            for (let i = -35; i <= 35; i += 6) {
+                const hLine = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.15), lineMaterial);
+                hLine.rotation.x = -Math.PI / 2;
+                hLine.position.set(i, 0.02, 0);
+                scene.add(hLine);
+
+                const vLine = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 3), lineMaterial);
+                vLine.rotation.x = -Math.PI / 2;
+                vLine.position.set(0, 0.02, i);
+                scene.add(vLine);
+            }
+        }
+
+        // 添加树木装饰
+        function addTrees() {
+            const treePositions = [
+                [-25, -25], [-25, -10], [-25, 10], [-25, 25],
+                [25, -25], [25, -10], [25, 10], [25, 25],
+                [-10, -25], [10, -25], [-10, 25], [10, 25],
+                [-30, 0], [30, 0], [0, -30], [0, 30]
+            ];
+
+            const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
+            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+            const foliageGeometry = new THREE.ConeGeometry(1.5, 3, 8);
+            const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8 });
+
+            treePositions.forEach(function (pos) {
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.set(pos[0], 1, pos[1]);
+                trunk.castShadow = true;
+                scene.add(trunk);
+
+                const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+                foliage.position.set(pos[0], 3, pos[1]);
+                foliage.castShadow = true;
+                scene.add(foliage);
+            });
+        }
+
+        // 窗口大小变化
+        function onWindowResize() {
+            const container = document.getElementById('three-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
