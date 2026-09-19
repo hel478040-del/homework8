@@ -162,31 +162,30 @@ function initCharts() {
     });
 }
 
+// 图表数据（内嵌，支持 file:// 协议直接打开）
+var chartData = {
+    title: '各自习室近7天使用量统计',
+    unit: '人次',
+    source: '校园自习室管理系统',
+    period: '近7天',
+    rooms: ['101自习室', '102自习室', '201自习室', '202自习室', '301自习室', '401自习室', '402自习室', '501自习室'],
+    usage: [420, 380, 650, 520, 780, 590, 410, 480]
+};
+
 // 加载图表数据
 function loadChartData() {
-    const chartContainer = document.getElementById('chart-container');
-    const chartError = document.getElementById('chart-error');
+    var chartContainer = document.getElementById('chart-container');
+    var chartError = document.getElementById('chart-error');
 
-    fetch('data/data.json')
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error('网络请求失败');
-            }
-            return response.json();
-        })
-        .then(function (data) {
-            if (!data.usageStatistics || !data.usageStatistics.rooms || !data.usageStatistics.usage) {
-                throw new Error('数据格式错误');
-            }
-            renderChart(data.usageStatistics);
-        })
-        .catch(function (error) {
-            console.error('图表数据加载失败:', error);
-            if (chartError && chartContainer) {
-                chartContainer.style.display = 'none';
-                chartError.classList.remove('d-none');
-            }
-        });
+    try {
+        renderChart(chartData);
+    } catch (error) {
+        console.error('图表渲染失败:', error);
+        if (chartError && chartContainer) {
+            chartContainer.style.display = 'none';
+            chartError.classList.remove('d-none');
+        }
+    }
 }
 
 // 渲染ECharts图表
